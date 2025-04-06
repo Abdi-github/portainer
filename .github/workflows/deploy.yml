@@ -1,0 +1,32 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main] # Run this workflow on every push to the main branch
+
+jobs:
+  deploy-portainer:
+    name: Deploy Portainer via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3 # Get the code from your GitHub repo
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }} # Add your private SSH key in GitHub secrets
+
+      - name: Copy files to VPS
+        run: |
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./projects/portainer/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USER }}/projects/portainer/
+        # Syncs the local project directory to the same path on your VPS
+
+      - name: Deploy with Docker Compose
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd /home/${{ secrets.VPS_USER }}/projects/portainer
+            docker compose pull   # Get the latest image
+            docker compose up -d  # Start or recreate the container
+          EOF
