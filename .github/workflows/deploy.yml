@@ -2,53 +2,32 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: [main] # Run this workflow on every push to the main branch
+    branches: [ main ]  # Trigger this workflow on push to main branch
 
 jobs:
-  deploy-portainer:
+  deploy:
     name: Deploy Portainer via SSH
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3 # Get the code from your GitHub repo
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up SSH key
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.VPS_SSH_KEY }} # Add your private SSH key in GitHub secrets
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
+    - name: Copy files to VPS
+      run: |
+        rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" ./projects/portainer/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USER }}/projects/portainer/
 
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/vps_key
-          chmod 600 ~/.ssh/vps_key
-          # Add VPS to known_hosts
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-
-
-      - name: Test SSH connection
-        run: |
-          ssh -i ~/.ssh/vps_key \
-          -o StrictHostKeyChecking=no \
-          -o UserKnownHostsFile=/dev/null \
-          ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-          "echo 'SSH successful!'"
-      
-      - name: Copy files to VPS
-        run: |
-          scp -i ~/.ssh/vps_key \
-          -o StrictHostKeyChecking=no \
-          -o UserKnownHostsFile=/dev/null \
-          -r ./portainer/* \
-          ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USER }}/projects/portainer/
-        # Syncs the local project directory to the same path on your VPS
-
-      - name: Deploy with Docker Compose
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            cd /home/${{ secrets.VPS_USER }}/projects/portainer
-            docker compose pull   # Get the latest image
-            docker compose up -d  # Start or recreate the container
-          EOF
+    - name: Deploy Portainer on VPS
+      run: |
+        ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          cd /home/${{ secrets.VPS_USER }}/projects/portainer
+          docker compose pull
+          docker compose up -d
+        EOF
