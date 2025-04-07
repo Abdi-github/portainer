@@ -35,5 +35,5 @@ jobs:
         ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
           cd /home/${{ secrets.VPS_USER }}/projects/portainer
           docker compose pull
-          docker compose up -d
+          docker compose up -d --force-recreate
         EOF

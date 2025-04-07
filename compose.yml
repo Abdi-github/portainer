@@ -6,6 +6,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
+    networks:
+      - traefik_proxy  
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.portainer.rule=Host(`portainer.swiftapp.ch`)"
@@ -16,3 +18,7 @@ services:
 
 volumes:
   portainer_data:
+
+networks:
+  traefik_proxy:
+    external: true  
