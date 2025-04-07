@@ -21,12 +21,12 @@ jobs:
         ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
     - name: Prepare VPS directory
-        run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no abdi@${{ secrets.VPS_HOST }} "mkdir -p /home/abdi/projects/portainer"
+      run: |
+        ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no abdi@${{ secrets.VPS_HOST }} "mkdir -p /home/abdi/projects/portainer"
 
     - name: Copy files to VPS
-        run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" ./portainer/ abdi@${{ secrets.VPS_HOST }}:/home/abdi/projects/portainer/
+      run: |
+        rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" ./portainer/ abdi@${{ secrets.VPS_HOST }}:/home/abdi/projects/portainer/
 
 
     - name: Deploy Portainer on VPS
