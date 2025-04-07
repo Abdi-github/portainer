@@ -26,7 +26,8 @@ jobs:
 
     - name: Copy files to VPS
       run: |
-        rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" ./portainer/ abdi@${{ secrets.VPS_HOST }}:/home/abdi/projects/portainer/
+        rsync -avz --exclude '.git' --exclude '.github' -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" ./ abdi@${{ secrets.VPS_HOST }}:/home/abdi/projects/portainer/
+
 
 
     - name: Deploy Portainer on VPS
