@@ -10,11 +10,16 @@ services:
       - traefik_proxy  
     labels:
       - "traefik.enable=true"
+      - "traefik.http.routers.portainer.entrypoints=https"
       - "traefik.http.routers.portainer.rule=Host(`portainer.swiftapp.ch`)"
-      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls=true"
       - "traefik.http.routers.portainer.tls.certresolver=cloudflare"
+      - "traefik.http.routers.portainer.tls.domains[0].main=swiftapp.ch"
+      - "traefik.http.routers.portainer.tls.domains[0].sans=*.swiftapp.ch"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-      # - "traefik.http.routers.portainer.middlewares=traefik-auth"
+      # Optional basic auth (uncomment if you want to add another layer of protection)
+      # - "traefik.http.routers.portainer.middlewares=portainer-auth"
+      # - "traefik.http.middlewares.portainer-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
 
 volumes:
   portainer_data:
